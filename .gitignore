@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculator</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+      display: grid;
+      place-items: center;
+      background: #eef2f7;
+      color: #172337;
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      width: min(100%, 22rem);
+      padding: 1.25rem;
+      border-radius: 1rem;
+      background: white;
+      box-shadow: 0 1rem 2rem #17233720;
+    }
+
+    h1 { margin: 0 0 1rem; font-size: 1.25rem; }
+
+    output {
+      display: block;
+      margin-bottom: 1rem;
+      padding: .75rem;
+      border-radius: .5rem;
+      background: #172337;
+      color: white;
+      text-align: right;
+      font-size: 2rem;
+      overflow-wrap: anywhere;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .5rem;
+    }
+
+    button {
+      min-height: 3rem;
+      border: 0;
+      border-radius: .5rem;
+      background: #edf1f6;
+      color: inherit;
+      font: inherit;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(.93); }
+    button:focus-visible { outline: 3px solid #2454bc; }
+    .wide { grid-column: span 3; }
+    .operator { background: #dce8ff; }
+    .equals { background: #2454bc; color: white; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Calculator</h1>
+    <output id="display" aria-label="Calculator display">0</output>
+    <div class="keys">
+      <button class="wide" data-key="clear" aria-label="Clear">AC</button>
+      <button class="operator" data-key="*" aria-label="Multiply">×</button>
+
+      <button data-key="7">7</button>
+      <button data-key="8">8</button>
+      <button data-key="9">9</button>
+      <button class="operator" data-key="-" aria-label="Subtract">−</button>
+
+      <button data-key="4">4</button>
+      <button data-key="5">5</button>
+      <button data-key="6">6</button>
+      <button class="operator" data-key="+" aria-label="Add">+</button>
+
+      <button data-key="1">1</button>
+      <button data-key="2">2</button>
+      <button data-key="3">3</button>
+      <button class="equals" data-key="=" aria-label="Equals">=</button>
+
+      <button class="wide" data-key="0">0</button>
+    </div>
+  </main>
+
+  <script>
+    const display = document.querySelector('#display');
+
+    let entry = '0';
+    let total = 0n;
+    let operator = null;
+    let startNewEntry = true;
+
+    function calculate(left, operation, right) {
+      switch (operation) {
+        case '+': return left + right;
+        case '-': return left - right;
+        case '*': return left * right;
+      }
+    }
+
+    function press(key) {
+      if (/^[0-9]$/.test(key)) {
+        entry = startNewEntry || entry === '0' ? key : entry + key;
+        startNewEntry = false;
+      } else if (key === 'clear') {
+        entry = '0';
+        total = 0n;
+        operator = null;
+        startNewEntry = true;
+      } else {
+        if (operator && !startNewEntry) {
+          entry = String(calculate(total, operator, BigInt(entry)));
+        }
+
+        total = BigInt(entry);
+        operator = key === '=' ? null : key;
+        startNewEntry = true;
+      }
+
+      display.textContent = entry;
+    }
+
+    document.querySelector('.keys').addEventListener('click', event => {
+      const button = event.target.closest('button');
+      if (button) press(button.dataset.key);
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.key === 'Enter' && event.target instanceof HTMLButtonElement) return;
+
+      const key = { Enter: '=', Escape: 'clear' }[event.key] ?? event.key;
+      if (key === 'clear' || /^[0-9+*=\-]$/.test(key)) {
+        event.preventDefault();
+        press(key);
+      }
+    });
+  </script>
+</body>
+</html>
